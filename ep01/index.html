@@ -661,7 +661,7 @@ var REC = (function () {
     h += '<div class="fwrap"><div class="framebox" id="fb">'+DRAW.frame(s, DRAW.stateAt(s,-1), {})+'</div><div class="cue" id="cue"></div></div>';
     h += '<div class="camrow">'+DRAW.minimap(s)+'<div class="camtxt"><b>카메라</b>'+s.cam.label+'</div></div>';
     if (s.slot) h += '<div class="slot"><b>자유 묘기 칸</b><br>'+s.slot+'</div>';
-    h += '<div class="playall"><button class="big" id="pa">▶ 장면 전체 듣기</button><button class="big follow" id="pf">따라하기 시작</button><button class="big stop" id="ps">■ 멈춤</button><button class="big rec" id="pr">🎥 이 장면 촬영</button></div><div class="takes" id="takes"></div>';
+    h += '<div class="playall"><button class="big" id="pa">▶ 장면 전체 듣기</button><button class="big follow" id="pf">따라하기 시작</button><button class="big stop" id="ps">■ 멈춤</button><button class="big rec" id="pr">🎥 이 장면 촬영</button><button class="big" id="psl">🎬 슬레이트</button></div><div class="takes" id="takes"></div>';
     h += '<details class="all"><summary>📜 전체 대사 한눈에 보기</summary><ol class="lines">';
     s.items.forEach(function(it,i){
       if (it.t==='act') { h += '<li class="dir" data-i="'+i+'"><span class="ic">지문</span><span>'+it.text+'</span></li>'; return; }
@@ -680,6 +680,7 @@ var REC = (function () {
     $('pf').onclick = function(){ playScene(true) };
     $('ps').onclick = stop;
     $('pr').onclick = function(){ stop(); REC.open(s); };
+    $('psl').onclick = function(){ stop(); SLATE(s); };
     REC.mount(s);
     ci = 0; cue(); show(0, s.items[0].t==='line'?s.items[0].who:undefined);
     $('pf').style.display = mode==='follow' ? '' : 'none';
@@ -784,6 +785,31 @@ var REC = (function () {
   if (/follow/.test(location.hash)) { mode='follow'; Array.prototype.forEach.call($('mode').children,function(x){x.classList.toggle('on',x.dataset.mode==='follow')}); }
   render();
 })();
+</script>
+
+<div id="slate" style="position:fixed;inset:0;z-index:999;background:#111;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;gap:2vh;font-family:inherit;text-align:center;touch-action:manipulation">
+ <div style="font-size:4vh;opacity:.7">EP.01 · 누나가 줄넘기 선생님이 되면 생기는 일</div>
+ <div id="slS" style="font-size:16vh;font-weight:900;line-height:1"></div>
+ <div id="slT" style="font-size:9vh;font-weight:800;color:#ffd23c"></div>
+ <div id="slN" style="font-size:3.6vh;opacity:.8;max-width:90vw"></div>
+ <div style="display:flex;gap:2vw;margin-top:2vh"><button id="slM" class="big">− 테이크</button><button id="slC" class="big" style="background:#ff5c8a;color:#fff;font-size:4vh;padding:2vh 6vw">👏 딱! (촬영 시작)</button><button id="slP" class="big">+ 테이크</button><button id="slX" class="big">닫기</button></div>
+ <div style="font-size:2.6vh;opacity:.6;margin-top:1vh">폰으로 녹화를 먼저 켜고 → 이 화면을 폰 카메라에 2초 보여 준 뒤 «딱!»을 누르세요 (편집할 때 장면·테이크를 자동으로 찾아요)</div>
+</div>
+<script>
+// 🎬 슬레이트(10/25 «콘티는 아이패드, 촬영은 핸드폰») — 폰 영상 첫머리에 장면·테이크 번호 + «딱» 소리를 남겨 편집 때 자동 정리
+var SLATE=(function(){var el=document.getElementById('slate'),sc=null,ac=null;
+ function key(){return 'slate_ep01_'+sc.id}
+ function tk(){try{return +localStorage.getItem(key())||1}catch(e){return 1}}
+ function setTk(n){try{localStorage.setItem(key(),Math.max(1,n))}catch(e){}draw()}
+ function draw(){document.getElementById('slS').textContent='장면 '+sc.id;document.getElementById('slT').textContent='테이크 '+tk();document.getElementById('slN').textContent=sc.title}
+ function clap(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();var t=ac.currentTime;
+   [1000,2000].forEach(function(f){var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.connect(g);g.connect(ac.destination);g.gain.setValueAtTime(0.9,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.25);o.start(t);o.stop(t+0.26)});}catch(e){}
+  el.style.background='#fff';setTimeout(function(){el.style.background='#111';el.style.display='none';setTk(tk()+1)},180)}
+ document.getElementById('slC').onclick=clap;
+ document.getElementById('slP').onclick=function(){setTk(tk()+1)};
+ document.getElementById('slM').onclick=function(){setTk(tk()-1)};
+ document.getElementById('slX').onclick=function(){el.style.display='none'};
+ return function(s){sc=s;draw();el.style.display='flex'}})();
 </script>
 </body>
 </html>
