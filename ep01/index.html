@@ -128,7 +128,7 @@ details.extra li{font-size:18px;line-height:1.6}
 #R .top b{flex:1;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #R .tb{border-radius:12px;padding:10px 14px;background:#ffffff22;color:#fff;font-size:17px}
 #R .tb.on{background:#ffd23f;color:#3b2f2a}
-#R .stage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+#R .stage{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 #R .box{position:relative;aspect-ratio:16/9;max-width:100%;max-height:100%;width:100%;background:#000;border-radius:10px;overflow:hidden}
 #R video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 #R .guide{position:absolute;inset:0;opacity:.3;pointer-events:none}
@@ -136,7 +136,7 @@ details.extra li{font-size:18px;line-height:1.6}
 #R .badge{position:absolute;left:12px;top:12px;background:#e5484d;border-radius:10px;padding:5px 10px;font-size:17px;display:none}
 #R .cnt{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:160px;font-weight:900;color:#fff;text-shadow:0 4px 20px #000}
 #R .hint{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:#000a;border-radius:10px;padding:6px 12px;font-size:15px;white-space:nowrap}
-#R .prompt{display:flex;align-items:center;gap:8px;padding:8px 12px}
+#R .prompt{display:flex;align-items:center;gap:8px;padding:8px 12px;width:100%;box-sizing:border-box}
 #R .pl{flex:1;min-height:76px;border-radius:16px;background:#ffffff14;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;cursor:pointer}
 #R .pl .w{font-size:15px;opacity:.85}#R .pl .t{font-size:26px;font-weight:800;line-height:1.25}#R .pl .n{font-size:15px;opacity:.6;margin-top:2px}
 #R .pa{border-radius:14px;width:54px;height:76px;background:#ffffff22;color:#fff;font-size:24px}
@@ -146,7 +146,14 @@ details.extra li{font-size:18px;line-height:1.6}
 #R .sb{border-radius:14px;padding:14px 20px;font-size:19px;background:#ffffff22;color:#fff}
 #R .sb.ok{background:#30a46c}
 #R .time{font-variant-numeric:tabular-nums;font-size:20px;min-width:70px;text-align:center}
-@media (orientation:landscape){#R .prompt{position:absolute;left:12px;right:12px;bottom:110px;z-index:3}#R .pl{background:#000a}}
+/* ★ 휴대폰 세로에서 대사 칸이 영상 옆에 끼어 세로로 찌그러지던 문제(10/25) → 세로=영상 아래, 가로=영상 오른쪽 */
+@media (orientation:landscape){#R .stage{flex-direction:row;padding:0 10px;gap:10px}
+ #R .box{width:min(62vw,calc((100dvh - 190px) * 1.778));max-height:none;flex:none}
+ #R .prompt{flex:1;width:auto;padding:0;align-self:stretch}#R .pl .t{font-size:clamp(22px,2.8vw,42px)}#R .pl .w,#R .pl .n{font-size:clamp(14px,1.5vw,20px)}#R .pl{align-self:stretch;justify-content:center}#R .pa{align-self:center}}
+@media (orientation:landscape) and (max-height:520px){#R .top{padding:4px 10px;padding-top:4px}#R .tb{padding:6px 10px;font-size:15px}#R .top b{font-size:15px}
+ #R .bot{padding:4px 10px;gap:12px}#R .rb{width:58px;height:58px;border-width:5px}#R .rb.stopb{width:54px;height:54px}#R .sb{padding:8px 14px;font-size:16px}
+ #R .box{width:min(60vw,calc((100dvh - 130px) * 1.778))}#R .pl .t{font-size:22px}#R .pa{width:44px;height:64px}#R .hint{font-size:12px}}
+@media (orientation:portrait){#R .box{max-height:calc(100% - 110px);width:auto;max-width:100%;height:auto}#R .box{width:100%}}
 </style>
 </head>
 <body>
@@ -539,7 +546,9 @@ var REC = (function () {
     var L = lines(), it = L[li];
     if (!it) { $('Rw').textContent = ''; $('Rt').textContent = '장면 끝 — ■ 눌러 멈춰요'; $('Rn').textContent = ''; return }
     $('Rw').textContent = it.who + (it.act ? ' · (' + it.act + ')' : ''); $('Rw').style.color = DRAW.COLOR[it.who] || '#fff';
-    $('Rt').textContent = it.text; var nx = L[li + 1]; $('Rn').textContent = nx ? '다음 ▸ ' + nx.who + ': ' + nx.text : '마지막 대사';
+    $('Rt').textContent = it.text; var nx = L[li + 1];
+    // ★ 겹쳐 보이는 가이드 그림도 지금 대사 장면으로(10/25 «안의 그림이랑 밖의 대사가 안 어울려»)
+    var gi = scene.items.indexOf(it); if (gi >= 0) $('Rg').innerHTML = DRAW.frame(scene, DRAW.stateAt(scene, gi), { speaker: it.who }); $('Rn').textContent = nx ? '다음 ▸ ' + nx.who + ': ' + nx.text : '마지막 대사';
   }
   async function cam() {
     if (stream) stream.getTracks().forEach(function (t) { t.stop() });
